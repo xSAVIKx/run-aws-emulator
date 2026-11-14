@@ -59,7 +59,13 @@ A tag such as `v1` can move to a new commit. A full commit SHA cannot move. For 
 strictest pin, use the commit of a release and keep the version in a comment:
 
 ```yaml
-      - uses: xSAVIKx/run-aws-emulator@7a51c40fa9285e94bf328e4e44ebbde07bddaaac # v1.1.0
+      - uses: xSAVIKx/run-aws-emulator@<commit-sha> # v1.1.1
+```
+
+To get the commit SHA of a release, run:
+
+```sh
+git ls-remote https://github.com/xSAVIKx/run-aws-emulator 'refs/tags/v1.1.1^{}'
 ```
 
 Dependabot and Renovate update this form of pin and its comment. In this repository, a
