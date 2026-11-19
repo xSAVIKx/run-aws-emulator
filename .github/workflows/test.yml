@@ -245,7 +245,10 @@ jobs:
           test "$AWS_ENDPOINT_URL" = "$ENDPOINT2"
           # The two emulators must keep separate data.
           aws s3 mb s3://only-in-second
-          aws s3 ls --endpoint-url "$ENDPOINT1" --ca-bundle "$CA1" > first.txt
+          # Each emulator has its own credentials in its own directory.
+          AWS_SHARED_CREDENTIALS_FILE="$HOME/.aws/emulator/9297/emulator_credentials" \
+            AWS_CONFIG_FILE="$HOME/.aws/emulator/9297/config" \
+            aws s3 ls --endpoint-url "$ENDPOINT1" --ca-bundle "$CA1" > first.txt
           if grep -q only-in-second first.txt; then echo "the first emulator has the bucket"; exit 1; fi
           aws s3 ls | grep -q only-in-second
       - name: Remove the second container as the README shows
@@ -289,7 +292,8 @@ jobs:
           set -euxo pipefail
           test "$AWS_REGION" = eu-central-1
           test "$AWS_DEFAULT_REGION" = eu-central-1
-          test "$(aws configure list | awk '$1 == "region" { print $2 }')" = eu-central-1
+          aws configure list | tee configure.txt
+          grep -E '^ *region ' configure.txt | grep -qw eu-central-1
           # 3g is 3 * 1024^3 bytes.
           test "$(docker inspect -f '{{.HostConfig.Memory}}' "$NAME")" = 3221225472
           test "$(docker inspect -f '{{.HostConfig.MemorySwap}}' "$NAME")" = 3221225472
