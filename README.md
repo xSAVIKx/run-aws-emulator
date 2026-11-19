@@ -213,7 +213,9 @@ your own user.
 ### Dump the emulator logs when a job fails
 
 Give the action step an `id`. Add a last step with `if: failure()`. The `container`
-output holds the container name. The action sets it also when the start fails.
+output holds the container name. The action sets it also when the container does not
+become ready. It does not set it when an input is not valid, because the action stops
+before it starts a container.
 
 ```yaml
       - uses: xSAVIKx/run-aws-emulator@v1
@@ -223,8 +225,8 @@ output holds the container name. The action sets it also when the start fails.
         run: docker logs "${{ steps.emulator.outputs.container }}"
 ```
 
-If you set `engine: podman`, use `podman logs`. When the emulator does not start, the
-action already prints the last 50 lines of the container log.
+If you set `engine: podman`, use `podman logs`. When the container starts but does not
+become healthy, the action already prints the last 50 lines of the container log.
 
 ### Cache the image between runs
 
@@ -266,6 +268,11 @@ Notes:
   writes an uncompressed archive, and `actions/cache` compresses it. This action repository
   did not measure the cache size. Each variant and each architecture is a separate cache entry.
   GitHub removes old entries when a repository goes over its cache limit.
+- `actions/cache` saves the cache only when the job succeeds. If the first job fails, the
+  next job pulls the image again.
+- After `docker load`, the `image-digest` output can be empty, because a loaded image can
+  have no repository digest. The `cosign verify` example above then has no digest to
+  verify. Verify the image before you save it, or verify by tag and digest in the cache step.
 - A fast registry pull can be as quick as a cache restore. Measure both before you keep the cache.
 
 ### Test all image variants in a matrix
